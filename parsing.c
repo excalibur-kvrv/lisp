@@ -13,6 +13,10 @@ number        :  -?[0-9]+(\\.[0-9]+)?
 
 */
 
+long negate(long x) {
+  return -x;
+}
+
 // use operator string to see which operation to perform
 long eval_op(long x, char* op, long y) {
   if (strcmp(op, "+") == 0) return x + y;
@@ -20,6 +24,7 @@ long eval_op(long x, char* op, long y) {
   if (strcmp(op, "*") == 0) return x * y;
   if (strcmp(op, "/") == 0) return x / y;
   if (strcmp(op, "%") == 0) return x % y;
+  if (strcmp(op, "^") == 0) return (long)pow(x, y);
   return 0;
 }
 
@@ -35,7 +40,12 @@ long eval(mpc_ast_t* t) {
   // we store the third variable in x
   long x = eval(t -> children[2]);
 
-  // Iterate remaining children and combining 
+  // negate 1st operand if there is no 2nd operand
+  if ((strcmp(op, "-") == 0) && !(strstr(t -> children[3] -> tag, "expression"))) {
+    return negate(x);
+  }
+
+  // Iterate remaining children and combining
   int i = 3;
   while (strstr(t -> children[i] -> tag, "expression")) {
     x = eval_op(x, op, eval(t -> children[i]));
@@ -55,7 +65,7 @@ int main(int argc, char** argv) {
   mpca_lang(MPCA_LANG_DEFAULT, 
   "                                                        \
     number     : /-?[0-9]+(\\.[0-9]+)?/ ;                              \
-    operator   : '+' | '-' | '*' | '/' | '%' ;                   \
+    operator   : '+' | '-' | '*' | '/' | '%' | '^' ;                   \
     expression : <number> | '(' <operator> <expression>+ ')' ;   \
     program    : /^/ <operator> <expression>+ /$/ ;              \
   ", Number, Operator, Expression, Program);
